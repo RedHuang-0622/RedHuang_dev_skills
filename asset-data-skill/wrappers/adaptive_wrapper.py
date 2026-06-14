@@ -10,12 +10,13 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 
-from ..filters.pipeline import Filter, PipelineContext, Wrapper
+from filters.pipeline import Filter, PipelineContext, Wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ class AdaptiveWrapper:
                             f"[Adaptive] Large text ({text_len} chars), "
                             f"using larger chunk size"
                         )
-                        ctx = object.__replace__(
+                        ctx = dataclasses.replace(
                             ctx,
                             meta={
                                 **ctx.meta,
@@ -121,7 +122,7 @@ class AdaptiveWrapper:
 
         new_meta["data_features"] = features
 
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)
 
     @staticmethod
     def _compute_text_ratio(df: pd.DataFrame) -> float:

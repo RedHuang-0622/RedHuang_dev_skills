@@ -6,13 +6,14 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class SummaryGeneratorFilter:
         summary = "\n".join(lines)
         logger.info(f"[{self.name}] Generated summary ({len(summary)} chars)")
 
-        return object.__replace__(ctx, summary=summary)
+        return dataclasses.replace(ctx, summary=summary)
 
     def rollback(self, ctx: PipelineContext) -> PipelineContext:
-        return object.__replace__(ctx, summary=None)
+        return dataclasses.replace(ctx, summary=None)

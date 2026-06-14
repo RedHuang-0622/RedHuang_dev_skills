@@ -13,8 +13,8 @@ from datetime import datetime
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 

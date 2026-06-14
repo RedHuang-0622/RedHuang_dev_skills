@@ -6,14 +6,15 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 import numpy as np
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class SchemaGeneratorFilter:
         )
 
         return (
-            object.__replace__(ctx, schema=schema)
+            dataclasses.replace(ctx, schema=schema)
             .with_metric("schema_columns", len(schema))
             .with_metric("anomaly_count", len(anomalies))
         )
@@ -179,4 +180,4 @@ class SchemaGeneratorFilter:
         return anomalies
 
     def rollback(self, ctx: PipelineContext) -> PipelineContext:
-        return object.__replace__(ctx, schema=None)
+        return dataclasses.replace(ctx, schema=None)

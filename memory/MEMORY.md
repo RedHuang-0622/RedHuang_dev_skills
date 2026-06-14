@@ -1,0 +1,3 @@
+- [管道-过滤器架构用于数据处理系统](pipeline-filter-architecture.md) — Pipes & Filters + Wrapper AOP 注入横切关注点，frozen Context 不可变数据流
+- [数据处理流水线的分层测试策略](testing-approach-for-data-pipelines.md) — 314 测试 1.97s 跑完，7 项新颖测试方法（模糊/攻击/穿透/冲突/交换/一致性/恢复）
+- [GOAL 方法论的实际执行经验](goals-methodology-skill-orchestration.md) — 5 阶段调度、文件交接协议、Skill 集群优缺点、深度级项目耗时与改进方向

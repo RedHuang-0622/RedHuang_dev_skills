@@ -7,6 +7,7 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
@@ -14,8 +15,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ class IndexLookupFilter:
             f"{len(cluster.get('fields', {}))} fields"
         )
 
-        return object.__replace__(ctx, cluster=cluster)
+        return dataclasses.replace(ctx, cluster=cluster)
 
     def _load_with_inheritance(self, cluster_path: Path, depth: int = 0) -> dict:
         """加载属性簇并解析继承链。"""
@@ -131,4 +132,4 @@ class IndexLookupFilter:
         return None
 
     def rollback(self, ctx: PipelineContext) -> PipelineContext:
-        return object.__replace__(ctx, cluster={})
+        return dataclasses.replace(ctx, cluster={})

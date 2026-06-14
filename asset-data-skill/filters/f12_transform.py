@@ -7,13 +7,14 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -115,4 +116,4 @@ class TransformerFilter:
         if df is not None:
             computed = list(ctx.cluster.get("computed_fields", {}).keys())
             df = df.drop(columns=[c for c in computed if c in df.columns], errors="ignore")
-        return object.__replace__(ctx, data=df)
+        return dataclasses.replace(ctx, data=df)

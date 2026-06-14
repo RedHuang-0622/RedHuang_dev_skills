@@ -13,8 +13,8 @@ import logging
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 

@@ -28,7 +28,18 @@ def imo_validator(series, field_name: str) -> list[dict]:
         if not isinstance(val, (str, int)):
             continue
 
-        imo = str(int(val)).zfill(7)
+        try:
+            imo = str(int(val)).zfill(7)
+        except (ValueError, TypeError):
+            issues.append({
+                "field": field_name,
+                "row_index": int(idx),
+                "description": f"IMO must be 7 digits, got '{val}'",
+                "severity": "error",
+                "suggestion": "Verify IMO number",
+            })
+            continue
+
         if len(imo) != 7 or not imo.isdigit():
             issues.append({
                 "field": field_name,

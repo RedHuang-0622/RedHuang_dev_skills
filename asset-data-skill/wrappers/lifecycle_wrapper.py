@@ -7,12 +7,13 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
 from pathlib import Path
 
-from ..filters.pipeline import Filter, PipelineContext, Wrapper
+from filters.pipeline import Filter, PipelineContext, Wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -81,4 +82,4 @@ class LifecycleWrapper:
             f"(TTL: {policy.get('default_ttl_days', '?')} days)"
         )
 
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)

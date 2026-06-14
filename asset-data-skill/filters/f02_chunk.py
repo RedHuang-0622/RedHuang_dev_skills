@@ -7,12 +7,13 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 from typing import Protocol, runtime_checkable
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +77,10 @@ class SizeChunker:
         while start < text_len:
             end = min(start + size, text_len)
             chunks.append(text[start:end])
+            if end >= text_len:
+                break
             start = end - overlap
-            if start <= 0 or start >= text_len:
+            if start <= 0:
                 break
 
         return chunks
@@ -110,8 +113,9 @@ class ChunkFilter:
         logger.info(f"[{self.name}] Produced {len(chunks)} chunks (size={self._chunk_size}, overlap={self._overlap})")
 
         new_meta = {**ctx.meta, "chunks": chunks, "chunk_count": len(chunks)}
-        return ctx.with_metric("chunk_count", len(chunks)).__replace__(meta=new_meta)
+        new_ctx = ctx.with_metric("chunk_count", len(chunks))
+        return dataclasses.replace(new_ctx, meta=new_meta)
 
     def rollback(self, ctx: PipelineContext) -> PipelineContext:
         new_meta = {k: v for k, v in ctx.meta.items() if k not in ("chunks", "chunk_count")}
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)

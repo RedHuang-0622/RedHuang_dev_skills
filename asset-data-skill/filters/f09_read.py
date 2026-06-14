@@ -7,6 +7,7 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
@@ -14,8 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class ReaderFilter:
             # 尝试作为原始文本读取
             logger.info(f"[{self.name}] Unknown format, reading as raw text: {ext}")
             raw = path.read_text(encoding=self._encoding or "utf-8")
-            return object.__replace__(ctx, raw_text=raw)
+            return dataclasses.replace(ctx, raw_text=raw)
 
         logger.info(f"[{self.name}] Reading {fmt}: {path}")
 

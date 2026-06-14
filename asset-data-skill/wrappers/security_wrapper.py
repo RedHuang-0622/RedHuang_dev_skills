@@ -6,16 +6,17 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import replace, dataclass
 from pathlib import Path
 from typing import Callable
 
 import pandas as pd
 
-from ..filters.pipeline import Filter, PipelineContext, Wrapper
+from filters.pipeline import Filter, PipelineContext, Wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class SecurityWrapper:
 
                 # 4. 实习生强制分步确认（标记 needs_confirmation）
                 if ctx.role == "intern":
-                    ctx = object.__replace__(
+                    ctx = dataclasses.replace(
                         ctx,
                         meta={**ctx.meta, "needs_confirmation": True},
                     )
@@ -94,7 +95,9 @@ class SecurityWrapper:
         """检查角色是否有权限执行该 Filter。"""
         role_info = self._role_config.get("roles", {}).get(role, {})
         allowed = role_info.get("allowed_operations", [])
-        return "*" in allowed  # admin 全部允许
+        if "*" in allowed:
+            return True  # admin 全部允许
+        return filter_name in allowed
 
     def _check_approval(self, role: str, filter_name: str) -> None:
         """检查是否需要审批。"""

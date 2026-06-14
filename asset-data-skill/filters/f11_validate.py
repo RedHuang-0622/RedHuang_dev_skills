@@ -7,15 +7,17 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import replace, dataclass
+from typing import Any, Callable
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class ValidatorFilter:
 
     name = "validate"
 
-    def __init__(self, custom_validators: dict[str, callable] | None = None):
+    def __init__(self, custom_validators: dict[str, Callable[..., Any]] | None = None):
         self._validators = custom_validators or {}
 
     def apply(self, ctx: PipelineContext) -> PipelineContext:
@@ -134,7 +136,7 @@ class ValidatorFilter:
         }
 
         return (
-            object.__replace__(ctx, meta=new_meta)
+            dataclasses.replace(ctx, meta=new_meta)
             .with_metric("validation_errors", len(errors))
             .with_metric("validation_warnings", len(warnings))
         )
@@ -252,4 +254,4 @@ class ValidatorFilter:
             k: v for k, v in ctx.meta.items()
             if k not in ("validation_issues", "validation_error_count", "validation_warning_count")
         }
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)

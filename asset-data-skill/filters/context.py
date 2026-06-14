@@ -12,6 +12,7 @@ Author: asset-data-skill
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -60,18 +61,18 @@ class PipelineContext:
 
     def with_data(self, data: pd.DataFrame | None) -> "PipelineContext":
         """创建新 Context，替换 data 字段。"""
-        return object.__replace__(self, data=data)
+        return dataclasses.replace(self, data=data)
 
     def with_entries(self, entries: list[dict] | None) -> "PipelineContext":
         """创建新 Context，替换 entries 字段。"""
-        return object.__replace__(self, entries=entries)
+        return dataclasses.replace(self, entries=entries)
 
     def with_artifact(self, step: str, path: str) -> "PipelineContext":
         """创建新 Context，追加 artifact 记录。"""
         new_artifacts = {**self.artifacts, step: path}
-        return object.__replace__(self, artifacts=new_artifacts)
+        return dataclasses.replace(self, artifacts=new_artifacts)
 
     def with_metric(self, key: str, value: Any) -> "PipelineContext":
         """创建新 Context，追加 metric 记录。"""
         new_metrics = {**self.metrics, key: value}
-        return object.__replace__(self, metrics=new_metrics)
+        return dataclasses.replace(self, metrics=new_metrics)

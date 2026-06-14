@@ -7,6 +7,7 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
@@ -14,8 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +73,8 @@ class SnapshotFilter:
             f"[{self.name}] Snapshot saved: {list(artifacts.keys())}"
         )
 
-        return ctx.with_artifact("snapshot", str(task_dir)).__replace__(
-            artifacts=new_artifacts
-        )
+        result = ctx.with_artifact("snapshot", str(task_dir))
+        return dataclasses.replace(result, artifacts=new_artifacts)
 
     def rollback(self, ctx: PipelineContext) -> PipelineContext:
         # 不删除文件（数据安全），仅从 artifacts 中移除
@@ -82,4 +82,4 @@ class SnapshotFilter:
             k: v for k, v in ctx.artifacts.items()
             if k not in ("data_csv", "schema_json", "summary_md", "raw_entries")
         }
-        return object.__replace__(ctx, artifacts=new_artifacts)
+        return dataclasses.replace(ctx, artifacts=new_artifacts)

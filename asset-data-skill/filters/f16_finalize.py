@@ -14,8 +14,8 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ class FinalizeFilter:
 
     def apply(self, ctx: PipelineContext) -> PipelineContext:
         task_dir = self._cache_dir / ctx.task_id
+        task_dir.mkdir(parents=True, exist_ok=True)
         final_dir = task_dir / "final"
         normalized_dir = task_dir / "normalized"
 

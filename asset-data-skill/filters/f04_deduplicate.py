@@ -11,8 +11,8 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 

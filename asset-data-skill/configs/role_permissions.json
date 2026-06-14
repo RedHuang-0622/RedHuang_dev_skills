@@ -19,7 +19,10 @@
       "can_override_policy": false,
       "allowed_operations": [
         "clean_and_validate", "extract_entries", "analyze",
-        "full_pipeline", "normalize_only", "transform", "generate_report"
+        "full_pipeline", "normalize_only", "transform", "generate_report",
+        "read", "clean", "validate", "transform_filter", "normalize_structure",
+        "normalize_numeric", "generate_schema", "generate_summary",
+        "chunk", "extract", "deduplicate", "analyze_filter", "index_lookup"
       ]
     },
     "intern": {
@@ -30,7 +33,9 @@
       "step_confirmation": "required",
       "can_override_policy": false,
       "allowed_operations": [
-        "clean_and_validate", "extract_entries", "normalize_only"
+        "clean_and_validate", "extract_entries", "normalize_only",
+        "read", "clean", "validate", "transform", "normalize_structure",
+        "normalize_numeric", "chunk", "extract", "deduplicate", "index_lookup"
       ],
       "high_risk_operations": ["delete_rows", "modify_sensitive", "export_full_data"],
       "require_mentor_approval_for": ["delete_rows", "modify_sensitive"]

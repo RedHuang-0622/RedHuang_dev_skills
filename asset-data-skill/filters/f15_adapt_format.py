@@ -7,6 +7,7 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import json
 import logging
@@ -14,8 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class FormatAdapterFilter:
         if "llm_reasoning" in agent_pref:
             documents = self._generate_documents(df, ctx.cluster)
             new_meta = {**ctx.meta, "documents": documents}
-            ctx = object.__replace__(ctx, meta=new_meta)
+            ctx = dataclasses.replace(ctx, meta=new_meta)
             logger.info(
                 f"[{self.name}] Generated {len(documents)} documents.jsonl entries"
             )
@@ -53,7 +54,7 @@ class FormatAdapterFilter:
         # 生成详细报告
         report = self._generate_enhanced_report(df, ctx)
         new_meta = {**ctx.meta, "enhanced_report": report}
-        ctx = object.__replace__(ctx, meta=new_meta)
+        ctx = dataclasses.replace(ctx, meta=new_meta)
 
         return ctx
 
@@ -149,4 +150,4 @@ class FormatAdapterFilter:
             k: v for k, v in ctx.meta.items()
             if k not in ("documents", "enhanced_report")
         }
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)

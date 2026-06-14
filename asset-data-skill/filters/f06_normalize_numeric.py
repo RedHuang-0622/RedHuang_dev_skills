@@ -7,14 +7,15 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 import numpy as np
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -88,4 +89,4 @@ class NumericNormalizerFilter:
         if df is not None:
             norm_cols = [c for c in df.columns if c.endswith(("_zscore", "_minmax"))]
             df = df.drop(columns=norm_cols, errors="ignore")
-        return object.__replace__(ctx, data=df)
+        return dataclasses.replace(ctx, data=df)

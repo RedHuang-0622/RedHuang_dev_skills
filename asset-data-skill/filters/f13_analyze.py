@@ -7,14 +7,15 @@ Author: asset-data-skill
 """
 
 from __future__ import annotations
+import dataclasses
 
 import logging
 
 import pandas as pd
 import numpy as np
 
-from ..context import PipelineContext
-from ..pipeline import Filter
+from .context import PipelineContext
+from .pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ class AnalyzerFilter:
         new_meta = {**ctx.meta, "analysis_result": analysis}
 
         return (
-            object.__replace__(ctx, meta=new_meta)
+            dataclasses.replace(ctx, meta=new_meta)
             .with_metric("outlier_columns", len(analysis["outliers"]))
             .with_metric(
                 "strong_correlations",
@@ -125,4 +126,4 @@ class AnalyzerFilter:
         new_meta = {
             k: v for k, v in ctx.meta.items() if k != "analysis_result"
         }
-        return object.__replace__(ctx, meta=new_meta)
+        return dataclasses.replace(ctx, meta=new_meta)
