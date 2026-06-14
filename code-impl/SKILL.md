@@ -1,272 +1,210 @@
 ---
 name: code-impl
-description: 根据方案执行编码，接口先行，增量验证，自动同步测试，遵循设计模式与工程约束
+description: 根据方案执行编码（Go/Python），接口先行，增量验证，自动生成 commit，遵循设计模式与工程约束
 ---
 
 # 编码实现专家 (Code-Impl)
 
 ## 目标
 
-严格按方案执行编码，每完成一步立即验证，自动更新相关测试文件。
+严格按方案编码，接口先行，每步验证。自动生成规范 commit message。
 
-## 上下文获取（按优先级尝试）
+## 编码原则（优先级从高到低）
 
-1. **dev-goal 模式**：工作目录 `docs/YYYY-MM-DD-{模块或功能名}/`
-   - 从 `devgoal流程.md` 的 `## G: Goal` 获取目标拆解与验收标准
-   - 从 `devgoal流程.md` 的 `## O: Options` 获取选定方案、接口草图、设计模式
-2. **独立模式**：读取 `docs/plan.md` + `docs/front-review.md`（保留兼容）
-3. **最小模式**：都不存在时，从当前代码库状态和用户需求反推
+1. **接口抽象 > 具体实现**：能用 interface/Protocol 绝不直接依赖具体类型。接口属于使用方
+2. **通用化 > 定制化**：能写成通用组件绝不写一次性代码。提取共性，差异通过参数/策略注入
+3. **工厂注入 > 单例**：能用工厂/DI 绝不依赖全局状态。所有依赖显式传入
+4. **组合 > 继承**：继承链 ≤2 层（Go 用 struct 嵌入，Python 用 Mixin + 组合）
+5. **高内聚低耦合**：模块内高度聚合，模块间仅通过最窄接口通信；util/common 不反向依赖业务
+6. **零循环依赖**：编译/import 时发现 → 立即用接口解耦
+7. **垂直切片**：一个子目标 → 测试 → 实现 → 验证 → 下一个，不批量操作
+8. **风格一致**：遵循项目现有 formatter/linter 配置
+9. **量化上限**：函数 ≤50 行，文件 ≤500 行，类 ≤250 行（Python）
 
-## 编码原则
+## 编码前检查
 
-- **接口先行**：先定义模块间接口，后写实现 — O 阶段有接口草图则严格遵循
-- **垂直切片**：一个测试 → 一个实现 → 验证通过 → 下一个，不批量操作
-- **类型优先**：充分利用类型系统，避免 `any` / `interface{}` 滥用
-- **单一职责**：每个函数 ≤ 50 行，每个文件 ≤ 500 行
-- **设计模式落地**：严格按方案中选定的设计模式编码
-- **接口通信**：模块间通过接口而非具体实现通信
-- **零循环依赖**：绝不引入循环依赖，如有必要即时重构为接口解耦
-- **风格一致**：与现有代码风格保持一致（命名、注释、错误处理方式）
+- [ ] 已读取 G 阶段子目标与验收标准
+- [ ] 已读取 O 阶段选定方案与接口契约
+- [ ] 已检查 import 链无循环依赖
+- [ ] 已确认语言（Go → `go.mod`，Python → `pyproject.toml`）
 
-## 编码前检查清单
+## 🛡️ 工程约束（语言共享）
 
-- [ ] 已读取 G 阶段目标拆解（知道要达成什么），或 plan.md
-- [ ] 已读取 O 阶段选定方案与接口契约（知道怎么实现），或 plan.md
-- [ ] 已检查 import 链，确认无循环依赖
-- [ ] 已确认与现有代码风格一致
+### 配置硬度
 
-## 🛡️ 工程约束（编码时强制）
+| 等级 | Go | Python | 场景 |
+|------|-----|--------|------|
+| 🔴 硬编码常量 | `const` / `var` block | `Final` / `UPPER_CASE` | 数学恒量、协议常量 |
+| 🟠 默认+覆盖 | `const defaultX` + `WithX()` | `def f(x: int = 30)` | 有公认默认值的参数 |
+| 🟡 环境变量 | `os.Getenv("X")` | `os.getenv("X")` | DB URL、密钥 |
+| 🟢 配置文件 | YAML + unmarshal | TOML + pydantic-settings | 复杂业务配置 |
+| 🔵 构造注入 | `func New(dep Dep)` | `def __init__(self, dep: Dep)` | 运行时依赖 |
+| ⚪ 特性开关 | 配置中心 | 配置中心 | 热更新参数 |
 
-### 配置硬度：实施对照
+**绝对禁止**：硬编码密钥/Token/密码/环境URL。
 
-| 值类型 | 必须用 | 检测方式 |
-|--------|-------|---------|
-| 密钥/Token/密码 | `os.Getenv` 或密钥服务 | Grep: `"sk-"`, `"password"`, `"token"` 不能出现在代码字面量 |
-| 环境相关 URL | env / config.yaml | Grep: `"http://"` 或 `"https://"` 后跟具体 IP/域名 → 抽到 env |
-| 不变常量 | `const` | 魔法数字/字符串出现在函数体中 → 提取为 named const |
-| 业务阈值 | default const + option | 如 `const defaultPageSize = 20` 但提供 `WithPageSize(n)` |
-| 外部依赖 | 构造函数注入 | 包级 `var client = http.Client{}` → 改为 `func New(cfg Config) *Svc` |
+### 依赖方向（铁律）
 
-**编码后自检**：对整个 diff 跑一次 mental grep — 是否有任何硬编码的秘密、URL、或环境特定值？
-
-### nil vs 空字符串：编码规则
-
-```go
-// ❌ 返回 nil string
-func GetName(id int) *string {
-    if id == 0 {
-        return nil  // 调用方解引用必崩
-    }
-    name := "user_" + strconv.Itoa(id)
-    return &name
-}
-
-// ✅ 返回零值 + error
-func GetName(id int) (string, error) {
-    if id == 0 {
-        return "", ErrInvalidID
-    }
-    return "user_" + strconv.Itoa(id), nil
-}
-
-// ✅ 需要区分"未提供"和"空"时才用指针
-type UpdateReq struct {
-    Name *string `json:"name"`  // nil=不更新, ""=清空, "xxx"=更新
-}
+```
+高层策略 → Protocol/interface  ✅
+高层策略 → 低层实现           ❌
+util/common → 业务模块        ❌ 架构倒挂
 ```
 
-**规则**：
-- 函数返回值：永远用 `(T, error)` 不用 `*T`
-- JSON API：需要区分 null 和 "" 时用 `*string`，否则用 `string` + `omitempty`
-- Map 写入前：必须 `make()` 或用字面量初始化。nil map 只允许只读场景
-- Slice 返回给 JSON API：用 `[]T{}` 不是 `nil`，确保序列化为 `[]` 而非 `null`
+### 全局状态禁令
 
-### 野指针：三条铁律
-
-```go
-// 铁律 1: 构造函数不返回 nil + nil error
-func NewSvc(dep Dep) (*Svc, error) {
-    if dep == nil {
-        return nil, errors.New("dep required")  // nil ptr + error = 合法
-    }
-    return &Svc{dep: dep}, nil
-}
-// 调用方: svc, err := NewSvc(dep);  if err != nil { return err }; svc.Do() ← 安全
-
-// 铁律 2: 循环变量不取地址
-// ❌
-for _, item := range items {
-    results = append(results, &item)  // 全都指向同一个地址！
-}
-// ✅
-for i := range items {
-    results = append(results, &items[i])  // 每个元素独立地址
-}
-
-// 铁律 3: interface nil ≠ 底层指针 nil
-// ❌
-var repo *mysqlRepo = nil
-var iface Repo = repo
-if iface == nil { ... }  // false! iface 有类型信息，不为 nil
-// ✅
-if repo == nil { ... }   // 直接判断底层指针
+```
+❌ 包级 var db *sql.DB         → main() 初始化 + 参数传递
+❌ 模块级 _cache: dict = {}     → class CacheService + DI
+❌ 模块级 _client = Client()    → __init__(self, client)
+❌ init() 复杂初始化            → 显式 Initialize()
 ```
 
-**提交前必查**：
-- [ ] `grep "return nil, nil"` — 禁止（调用方无法区分正常和异常）
-- [ ] `grep "return &.*\b(range\b|[A-Z])"` — 疑似返回 loop 变量地址
-- [ ] 所有 `*T` 返回值的函数，检查 nil 路径是否都伴随 error
+**唯一例外**：`sync.Pool`、`regexp.MustCompile`、`re.compile()` — 不可变/官方推荐。
 
-### 全局变量检测
+### 空值安全
 
-```bash
-# 提交前跑这个检查 — 发现包级 var 立即审视
-grep -nE "^var [a-z]" pkg/**/*.go  # 包级 var（导出 var 大写除外）
-grep -nE "^var [a-z]+ =" pkg/**/*.go  # 包级 + 初始化 = 最可疑
-```
+| | Go | Python |
+|------|-----|--------|
+| 可能为空 | `(T, error)` | `Optional[T]` + 调用方 `is not None` |
+| 不应为空 | `return T{}, ErrXxx` | `raise SpecificError(...)` |
+| 区分"未提供"和"空" | `*string` (nil vs "") | `Optional[str]` (None vs "") |
+| 禁止模式 | `return nil, nil` | `except: pass` / 裸 `return None` |
 
-**处理**：
-| 场景 | 改造方式 |
-|------|---------|
-| `var db *sql.DB` | → `main()` 中初始化 + 通过参数传递 |
-| `var once sync.Once` + init | → 显式初始化函数，避免隐式 init 顺序依赖 |
-| `var defaultTimeout = 30s` | → `const DefaultTimeout = 30 * time.Second` |
-| `var logger = log.New(...)` | → 构造函数注入或用 `log.Default()` |
-| `regexp.MustCompile` 包级 | ✅ 允许（官方推荐，不可变） |
-
-### 高内聚低耦合：提交前过一遍
-
-| 检查项 | 指标 |
-|--------|------|
-| 包级函数数 | > 10 个公开函数 → 职责可能太多 |
-| 文件行数 | > 500 行 → 拆文件 |
-| 函数行数 | > 50 行 → 拆函数（测试辅助除外） |
-| import 数 | 一个包 import > 8 个其他包 → 耦合过高 |
-| 循环依赖 | `go vet ./...` 零告警是底线 |
-| util/common 包 | 不 import 任何业务包 ← **铁律** |
-
-```go
-// ❌ 高耦合：util 包 import 业务包
-package util
-import "project/pkg/order"  // util 引业务 → 架构倒挂
-
-// ✅ 低耦合：util 零业务依赖
-package util
-import "encoding/json"  // 只引标准库或第三方基础库
-```
+---
 
 ## 执行步骤
 
 ### Step 1: 接口先行
 
-在实现之前，先定义模块间接口：
-
-```go
-// 先定义接口契约
-type IUserRepository interface {
-    FindByID(ctx context.Context, id string) (*User, error)
-    Save(ctx context.Context, user *User) error
-}
-```
+实现前先定义模块间接口（Go: `interface`，Python: `Protocol`），写在调用方模块中。
 
 ### Step 2: 按方案顺序实现
 
-按方案（devgoal流程.md O 阶段 或 plan.md）中的实现步骤顺序执行。每完成一个子目标：
+按 O 阶段实现步骤逐一执行。每步完成：
 
+**Go:**
 ```bash
-# 1. 编译检查
-go build ./...
-
-# 2. 仅运行相关测试（快速反馈）
-go test ./pkg/xxx/... -v -count=1
-
-# 3. 静态检查
-go vet ./...
+go build ./... && go test ./pkg/xxx/... -v -count=1 && go vet ./...
 ```
 
-**编译或测试失败 → 立即停止，修复后继续。**
+**Python:**
+```bash
+mypy src/ --strict && ruff check src/ && pytest tests/ -v -x --tb=short
+```
 
-### Step 3: 自动更新测试
+**编译/类型/测试失败 → 立即停止，修复后继续**
 
-当修改函数签名或行为时，同步更新对应测试文件：
+### Step 3: 同步更新测试
 
-- 识别被修改函数对应的测试文件（`*_test.go` 或 `*.test.ts`）
-- 更新断言以匹配新行为
-- 删除过时的测试
+修改签名/行为时同步更新对应 `*_test.go` 或 `test_*.py`。删除过时用例，更新参数化 case。
 
-### Step 4: 输出变更摘要
+### Step 4: 生成 commit message
 
-**根据调用模式选择输出目标**：
+编码完成、测试通过后，按 G 阶段子目标 1:1 生成 commit：
 
-| 模式 | 输出目标 |
-|------|---------|
-| dev-goal 模式 | 写入工作目录 `docs/YYYY-MM-DD-{模块或功能名}/code-changes.md` |
-| 独立模式 | 生成 `docs/YYYY-MM-DD-功能变更摘要-code-changes-{负责人姓名}.md` |
+```
+<type>(<scope>): <subject>          ← ≤50 字符，祈使句
 
-## 输出格式
+<body>                               ← 子目标逐条列出
+
+Refs: <G1, G2, G3...>
+```
+
+| type | 场景 |
+|------|------|
+| `feat` | 新增功能/API |
+| `fix` | 修复 bug |
+| `refactor` | 重构，行为不变 |
+| `perf` | 性能优化 |
+| `test` | 仅测试变更 |
+| `docs` / `chore` / `revert` | 文档/构建/回滚 |
+
+**展示 message 给用户确认，不直接提交。**
+
+### Step 5: 输出变更摘要
+
+写入工作目录 `code-changes.md`：
 
 ```markdown
 # 代码变更摘要
 
-## 新增文件
-| 文件路径 | 用途 | 设计模式 |
-|---------|------|---------|
-| pkg/xxx/xxx.go | [简述] | [模式名] |
-
-## 修改文件
-| 文件路径 | 修改类型 | 具体位置 | 说明 |
-|---------|---------|---------|------|
-| pkg/xxx/xxx.go | 重构/新增逻辑 | L45-L78 | [改了什么] |
-
-## 删除文件
-| 文件路径 | 删除原因 |
-|---------|---------|
-| pkg/xxx/deprecated.go | 功能迁移到新模块 |
+## 新增/修改/删除文件
+| 文件 | 类型 | 说明 | 设计模式 |
+|------|------|------|---------|
 
 ## API 变更
-| API | 变更类型 | 兼容性 | 迁移说明 |
-|-----|---------|-------|---------|
-| OldFunc(a, b string) | 签名变更 → NewFunc(ctx, a, b) | ⚠️ 不兼容 | 调用方需添加 ctx 参数 |
+| API | 变更 | 兼容性 |
 
 ## 设计模式使用
 | 模式 | 文件 | 效果 |
-|------|-----|------|
-| Strategy | payment.go | 支付方式可插拔 |
 
 ## 接口抽象
 | 接口 | 实现方 | 使用方 |
-|------|-------|-------|
-| IUserRepo | mysql/user_repo.go | order/service.go |
 
 ## 循环依赖检查
-- [ ] 已确认无新增循环依赖
+- [ ] 确认无新增
+
+## Commit 记录
+| Commit | Type | 子目标 | Message |
+|--------|------|-------|---------|
 ```
 
-## 禁止行为
+---
 
-- ❌ 在没有测试覆盖的情况下重构
-- ❌ 一次性修改超过 5 个不相关的文件
-- ❌ 在未读取方案（devgoal流程.md 或 plan.md）的情况下开始编码
-- ❌ 引入循环依赖（零容忍）
-- ❌ 跳过接口直接依赖具体实现
-- ❌ 使用全局变量做模块间通信
-- ❌ **硬编码密钥/密码/Token/环境URL**（必须 env 或配置）
-- ❌ **返回 nil 指针 + nil error**（调用方必崩，grep `return nil, nil` 自检）
-- ❌ **取 loop 变量地址**（所有的 `&item` 在 for range 中都是 bug）
-- ❌ **nil map 写入**（只读可以，写入必须 make）
-- ❌ **包级 var 可变状态**（`var db *sql.DB`、`var cache map[string]T` → DI）
-- ❌ **util/common 包 import 业务包**（架构倒挂）
-- ❌ 构造函数无 error 返回值却可能失败（用 `func New(...) (*T, error)` 而非 `func New(...) *T`）
+## 语言附录
+
+### Go 专项
+
+**提交前 grep:**
+```bash
+grep -rnE "return nil, nil" --include="*.go"          # 零容忍
+grep -rnE '^var [a-z]+ ' --include="*.go"              # 包级可变
+grep -rnE '"sk-|"password|"token|"secret' --include="*.go"  # 硬编码密钥
+```
+
+**Go 独有 pitfall:**
+- `for range` 取 `&item` → 全部指向同一地址 → 用 `&items[i]`
+- interface nil ≠ 底层指针 nil → 判断底层指针
+- nil map 只读安全，写入 panic → 写入前 `make()`
+
+### Python 专项
+
+**提交前 grep:**
+```bash
+grep -rnE 'except\s*:' --include="*.py"                # 裸 except 零容忍
+grep -rnE 'except.*:\s*$' --include="*.py"             # 吞异常
+grep -rnE 'def \w+\([^)]*=\s*\[\]' --include="*.py"   # 可变默认参数
+grep -rnE '"sk-|"password|"token|"secret' --include="*.py"  # 硬编码密钥
+grep -rnE "^_\w+\s*=\s*(httpx\.|requests\.|redis\.)" --include="*.py"  # 模块级连接
+```
+
+**Python 独有 pitfall:**
+- `def f(x=[])` → 所有调用共享同一 list → `def f(x=None)`
+- `except: pass` → 吞掉 KeyboardInterrupt → 指定异常类型
+- `__init__` 不能 async → 需要异步初始化用工厂函数 `async def create()`
+- 同步函数内调 `asyncio.run()` → 事件循环嵌套死锁
+- `is` 比较字面量 (`x is 5`) → 用 `==`
+
+---
+
+## 禁止行为 (Top 5)
+
+1. ❌ **硬编码密钥/密码/Token/环境URL**
+2. ❌ **循环依赖 / 循环 import**（零容忍，必须当场解耦）
+3. ❌ **模块级可变状态**（包级 var / 模块级 _cache / 模块级 Client）
+4. ❌ **跳过接口直接依赖具体实现**（interface/Protocol 先行）
+5. ❌ **不经验证批量提交**（每子目标 → 验证 → commit → 下一子目标）
 
 ## 暂停点
 
-询问用户："编码完成，请确认后我将运行完整测试"
+询问用户："编码完成，请确认后运行完整测试"
 
 ## 打断机制
 
-| 触发条件 | 处理方式 |
-|---------|---------|
-| 编译错误 | 停止，报告错误位置 |
+| 触发 | 处理 |
+|------|------|
+| 编译/类型检查失败 | 停止，报告错误 |
 | 测试失败 | 停止，报告失败用例 |
-| 发现方案未覆盖的依赖 | 停止，描述依赖，建议回 O 阶段补充 |
-| 发现潜在循环依赖 | 停止，先重构为接口解耦 |
+| 发现方案未覆盖的依赖 | 停止 → 回 O 阶段补充 |
+| 发现循环依赖 | 停止 → 接口解耦后继续 |

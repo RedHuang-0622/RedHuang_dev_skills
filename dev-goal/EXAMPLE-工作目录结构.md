@@ -159,18 +159,14 @@ func (s *PaymentService) Pay(ctx context.Context, order *Order, method string) (
 - API 无变更，现有调用方不受影响
 - 循环依赖检查：✅ 无循环
 
-### A1.5: Commit
+**Commit 记录**（按子目标 1:1）：
 
-按子目标 1:1 拆 commit：
-
-| Commit | Type | Message |
-|--------|------|---------|
-| `a1b2c3d` | `feat(strategy)` | define PaymentStrategy interface |
-| `e4f5g6h` | `feat(strategy)` | implement Alipay/Wechat/Bankcard strategies |
-| `i7j8k9l` | `refactor(payment)` | inject Strategy, remove if-else dispatch |
-| `m0n1o2p` | `test(payment)` | verify existing API compatibility |
-
-Refs: G1, G2, G3, G4
+| Commit | Type | 子目标 | Message |
+|--------|------|-------|---------|
+| `a1b2c3d` | `feat(strategy)` | G1 | define PaymentStrategy interface |
+| `e4f5g6h` | `feat(strategy)` | G2 | implement Alipay/Wechat/Bankcard strategies |
+| `i7j8k9l` | `refactor(payment)` | G3 | inject Strategy, remove if-else dispatch |
+| `m0n1o2p` | `test(payment)` | G4 | verify existing API compatibility |
 
 ### A2: 测试
 
