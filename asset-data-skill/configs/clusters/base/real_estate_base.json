@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "REAL_ESTATE_BASE",
+  "is_base": true,
+  "sensitivity": "sensitive",
+  "fields": {
+    "property_address": {
+      "type": "string",
+      "required": true,
+      "aliases": ["房产地址", "物业地址", "坐落", "地址"],
+      "validator": "address_validator",
+      "access_level": "internal"
+    },
+    "building_area_sqm": {
+      "type": "float",
+      "aliases": ["建筑面积", "面积(㎡)", "面积"],
+      "unit": "平方米",
+      "min": 0,
+      "normalization_available": ["zscore", "minmax"]
+    },
+    "land_area_sqm": {
+      "type": "float",
+      "aliases": ["土地面积", "占地面积"],
+      "unit": "平方米",
+      "min": 0
+    },
+    "valuation_amount": {
+      "type": "float",
+      "aliases": ["评估价值", "评估价", "估值"],
+      "unit": "元",
+      "min": 0,
+      "access_level": "internal"
+    }
+  },
+  "lifecycle": {
+    "default_ttl_days": 90,
+    "backup_required": true
+  }
+}

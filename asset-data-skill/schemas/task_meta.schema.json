@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task_meta.schema.json",
+  "title": "Task Metadata Schema",
+  "type": "object",
+  "required": ["task_id", "asset_type", "operation", "role", "status", "current_step", "created_at"],
+  "properties": {
+    "task_id": {"type": "string", "pattern": "^task_[a-z0-9-]+$"},
+    "asset_type": {"type": "string"},
+    "operation": {"type": "string"},
+    "role": {"type": "string", "enum": ["intern", "analyst", "admin"]},
+    "status": {"type": "string", "enum": ["PENDING", "RUNNING", "AWAITING_APPROVAL", "COMPLETED", "FAILED"]},
+    "current_step": {"type": "integer", "minimum": 0},
+    "step_checksums": {"type": "object", "additionalProperties": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "policy_override": {"type": "object"}
+  }
+}

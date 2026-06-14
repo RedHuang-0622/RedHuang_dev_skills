@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "raw_entries.schema.json",
+  "title": "Raw Entries Schema",
+  "description": "条目化预处理层产出的 raw_entries.json 结构",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["fields", "confidence"],
+    "properties": {
+      "fields": {
+        "type": "object",
+        "description": "提取的字段值 {field_name: value}",
+        "additionalProperties": {}
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "整体置信度"
+      },
+      "field_confidences": {
+        "type": "object",
+        "description": "逐字段置信度",
+        "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "source_quote": {
+        "type": "string",
+        "description": "原文引用"
+      },
+      "needs_review": {
+        "type": "boolean",
+        "default": false,
+        "description": "低置信度标记 — 需人工确认"
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "EQUIPMENT_BASE",
+  "is_base": true,
+  "sensitivity": "internal",
+  "fields": {
+    "equipment_name": {
+      "type": "string",
+      "required": true,
+      "aliases": ["设备名称", "资产名称", "名称"],
+      "access_level": "internal"
+    },
+    "purchase_price": {
+      "type": "float",
+      "aliases": ["购买价格", "原值", "购入价"],
+      "unit": "元",
+      "min": 0,
+      "access_level": "internal"
+    },
+    "purchase_date": {
+      "type": "date",
+      "aliases": ["购买日期", "购入日期", "入账日期"]
+    },
+    "useful_life_years": {
+      "type": "integer",
+      "aliases": ["使用年限", "折旧年限", "耐用年限"],
+      "min": 1,
+      "max": 50
+    },
+    "residual_rate": {
+      "type": "float",
+      "aliases": ["残值率", "净残值率"],
+      "min": 0,
+      "max": 1,
+      "default": 0.05
+    }
+  },
+  "computed_fields": {
+    "annual_depreciation": "purchase_price * (1 - residual_rate) / useful_life_years if all([purchase_price, residual_rate, useful_life_years]) else null",
+    "current_value": "purchase_price - annual_depreciation * years_since_purchase if purchase_price and annual_depreciation else null"
+  },
+  "lifecycle": {
+    "default_ttl_days": 180,
+    "backup_required": false
+  }
+}

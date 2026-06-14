@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cluster.schema.json",
+  "title": "Property Cluster Schema",
+  "description": "属性簇文件结构定义 — 每个资产类型对应一个属性簇 JSON",
+  "type": "object",
+  "required": ["cluster_id", "fields"],
+  "properties": {
+    "cluster_id": {
+      "type": "string",
+      "description": "属性簇唯一标识"
+    },
+    "is_base": {
+      "type": "boolean",
+      "default": false,
+      "description": "是否为基类（不可直接被资产类型引用）"
+    },
+    "inherits_from": {
+      "type": "string",
+      "description": "继承的基类 cluster_id。继承深度限制 ≤3"
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "sensitive", "restricted"]
+    },
+    "fields": {
+      "type": "object",
+      "description": "字段定义映射 {field_name: FieldDef}",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["string", "float", "integer", "date", "boolean"]
+          },
+          "required": {"type": "boolean", "default": false},
+          "aliases": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "列名别名列表"
+          },
+          "unit": {"type": "string"},
+          "min": {"type": "number"},
+          "max": {"type": "number"},
+          "default": {},
+          "enum": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "pattern": {"type": "string"},
+          "validator": {"type": "string"},
+          "access_level": {
+            "type": "string",
+            "enum": ["public", "internal", "restricted"]
+          },
+          "normalization_available": {
+            "type": "array",
+            "items": {"type": "string", "enum": ["zscore", "minmax"]}
+          },
+          "common_errors": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "computed_fields": {
+      "type": "object",
+      "description": "派生计算字段 {field_name: expression}",
+      "additionalProperties": {"type": "string"}
+    },
+    "table_mapping": {
+      "type": "object",
+      "properties": {
+        "default_columns": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "properties": {
+        "default_ttl_days": {"type": "integer", "minimum": 1},
+        "backup_required": {"type": "boolean"},
+        "stages": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "ttl_days": {"type": "integer", "minimum": 1},
+              "backup": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

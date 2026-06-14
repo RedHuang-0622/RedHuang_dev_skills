@@ -1,0 +1,30 @@
+{
+  "$schema": "../schemas/index.schema.json",
+  "version": "2.0",
+  "asset_catalog": {
+    "RE_MORTGAGE": {
+      "name": "房产-抵押",
+      "cluster_ref": "clusters/real_estate/mortgage.json",
+      "base_type": "real_estate",
+      "tags": ["抵押", "房产", "担保"],
+      "agent_preference": "csv_batch",
+      "lifecycle_policy": "short_term"
+    },
+    "SHIP_NPL": {
+      "name": "船舶-不良债权",
+      "cluster_ref": "clusters/ship/npl.json",
+      "base_type": "ship",
+      "tags": ["不良债权", "船舶"],
+      "agent_preference": "llm_reasoning",
+      "lifecycle_policy": "long_term"
+    },
+    "EQUIPMENT": {
+      "name": "通用设备",
+      "cluster_ref": "clusters/equipment/generic.json",
+      "base_type": "equipment",
+      "tags": ["设备", "固定资产"],
+      "agent_preference": "csv_batch",
+      "lifecycle_policy": "short_term"
+    }
+  }
+}

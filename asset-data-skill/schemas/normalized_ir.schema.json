@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "normalized_ir.schema.json",
+  "title": "Normalized IR Schema",
+  "description": "标准化中间表示层的数据契约 — data.csv + schema.json 的结构约定",
+  "type": "object",
+  "required": ["data_schema", "summary"],
+  "properties": {
+    "data_schema": {
+      "type": "object",
+      "description": "schema.json — 每列的详细元数据",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string", "enum": ["string", "float", "integer", "date", "boolean"]},
+          "count": {"type": "integer"},
+          "null_count": {"type": "integer"},
+          "unique_count": {"type": "integer"},
+          "mean": {"type": "number"},
+          "std": {"type": "number"},
+          "min": {},
+          "max": {},
+          "quantiles": {"type": "object"},
+          "normalization_available": {"type": "array", "items": {"type": "string"}},
+          "business_note": {"type": "string"}
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "summary.md — 人类可读的概览报告内容"
+    },
+    "row_count": {"type": "integer"},
+    "column_count": {"type": "integer"},
+    "anomalies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {"type": "string"},
+          "description": {"type": "string"},
+          "severity": {"type": "string", "enum": ["warning", "error"]},
+          "affected_rows": {"type": "integer"}
+        }
+      }
+    }
+  }
+}

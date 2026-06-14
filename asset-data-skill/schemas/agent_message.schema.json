@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_message.schema.json",
+  "title": "Agent Message Schema",
+  "description": "多 Agent 协作消息格式 — Agent 间通过 task_cache 目录交换数据的约定",
+  "type": "object",
+  "required": ["agent_id", "message_type", "payload"],
+  "properties": {
+    "agent_id": {"type": "string"},
+    "agent_role": {"type": "string", "enum": ["extractor", "cleaner", "analyzer", "auditor", "orchestrator"]},
+    "message_type": {"type": "string", "enum": ["TASK_REQUEST", "TASK_RESULT", "ERROR", "HEARTBEAT"]},
+    "task_id": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "payload": {
+      "type": "object",
+      "properties": {
+        "data_path": {"type": "string", "description": "task_cache 中的数据路径"},
+        "format": {"type": "string", "enum": ["data.csv", "raw_entries.json", "documents.jsonl"]},
+        "metrics": {"type": "object"},
+        "error_code": {"type": "string"},
+        "error_detail": {"type": "string"}
+      }
+    }
+  }
+}

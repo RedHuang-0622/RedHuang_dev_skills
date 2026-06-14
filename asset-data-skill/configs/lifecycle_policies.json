@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/lifecycle_policies.schema.json",
+  "policies": {
+    "ephemeral": {
+      "name": "瞬时",
+      "default_ttl_days": 1,
+      "backup_required": false,
+      "description": "任务完成立即清理中间产物",
+      "stages": {
+        "raw_upload": {"ttl_days": 1},
+        "normalized_ir": {"ttl_days": 1},
+        "final_output": {"ttl_days": 1}
+      }
+    },
+    "supervised_short_term": {
+      "name": "导师监督短期",
+      "default_ttl_days": 15,
+      "backup_required": false,
+      "description": "实习生任务默认策略，保留 15 天供导师复查",
+      "stages": {
+        "raw_upload": {"ttl_days": 7},
+        "normalized_ir": {"ttl_days": 15},
+        "final_output": {"ttl_days": 15}
+      }
+    },
+    "short_term": {
+      "name": "短期保留",
+      "default_ttl_days": 30,
+      "backup_required": false,
+      "description": "标准复查窗口",
+      "stages": {
+        "raw_upload": {"ttl_days": 7},
+        "normalized_ir": {"ttl_days": 30},
+        "final_output": {"ttl_days": 90}
+      }
+    },
+    "long_term": {
+      "name": "长期保留",
+      "default_ttl_days": 365,
+      "backup_required": true,
+      "description": "核心交付物和日志保留 1-10 年，归档冷存储",
+      "stages": {
+        "raw_upload": {"ttl_days": 30},
+        "normalized_ir": {"ttl_days": 180},
+        "final_output": {"ttl_days": 3650, "backup": true}
+      }
+    },
+    "permanent": {
+      "name": "永久保留",
+      "default_ttl_days": 36500,
+      "backup_required": true,
+      "description": "永久保留，需手动销毁",
+      "stages": {
+        "raw_upload": {"ttl_days": 365, "backup": true},
+        "normalized_ir": {"ttl_days": 3650, "backup": true},
+        "final_output": {"ttl_days": 36500, "backup": true}
+      }
+    }
+  }
+}

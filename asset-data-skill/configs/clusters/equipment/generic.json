@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "EQUIPMENT",
+  "inherits_from": "EQUIPMENT_BASE",
+  "sensitivity": "internal",
+  "fields": {
+    "department": {
+      "type": "string",
+      "aliases": ["使用部门", "所属部门", "部门"],
+      "access_level": "internal"
+    },
+    "location": {
+      "type": "string",
+      "aliases": ["存放地点", "位置", "所在地"],
+      "access_level": "internal"
+    },
+    "status": {
+      "type": "string",
+      "aliases": ["设备状态", "使用状态"],
+      "enum": ["在用", "闲置", "报废", "维修中"]
+    },
+    "last_maintenance_date": {
+      "type": "date",
+      "aliases": ["上次维护日期", "最近保养日"]
+    }
+  },
+  "table_mapping": {
+    "default_columns": [
+      "equipment_name",
+      "purchase_price",
+      "purchase_date",
+      "useful_life_years",
+      "department",
+      "status"
+    ]
+  },
+  "lifecycle": {
+    "default_ttl_days": 180,
+    "backup_required": false,
+    "stages": {
+      "raw_upload": {"ttl_days": 60},
+      "normalized_ir": {"ttl_days": 180},
+      "final_output": {"ttl_days": 365, "backup": true}
+    }
+  }
+}

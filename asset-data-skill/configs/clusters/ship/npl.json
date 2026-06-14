@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "SHIP_NPL",
+  "inherits_from": "SHIP_BASE",
+  "sensitivity": "sensitive",
+  "fields": {
+    "npl_amount": {
+      "type": "float",
+      "aliases": ["不良债权金额", "NPL余额", "不良余额"],
+      "unit": "元",
+      "min": 0,
+      "access_level": "restricted"
+    },
+    "npl_classification": {
+      "type": "string",
+      "aliases": ["五级分类", "风险分类", "贷款分类"],
+      "enum": ["正常", "关注", "次级", "可疑", "损失"],
+      "access_level": "internal"
+    },
+    "creditor": {
+      "type": "string",
+      "aliases": ["债权人", "贷款机构"],
+      "access_level": "restricted"
+    },
+    "loan_start_date": {
+      "type": "date",
+      "aliases": ["贷款起始日", "放款日期"]
+    },
+    "loan_end_date": {
+      "type": "date",
+      "aliases": ["贷款到期日", "到期日期"]
+    },
+    "collateral_coverage_ratio": {
+      "type": "float",
+      "aliases": ["抵押覆盖率", "担保覆盖率"],
+      "min": 0,
+      "common_errors": ["覆盖率<100%时需标注风险"]
+    }
+  },
+  "computed_fields": {
+    "不良率": "npl_amount / valuation_amount if valuation_amount else null",
+    "剩余期限": "loan_end_date - today() if loan_end_date else null"
+  },
+  "table_mapping": {
+    "default_columns": [
+      "ship_name",
+      "imo_number",
+      "gross_tonnage",
+      "valuation_amount",
+      "npl_amount",
+      "npl_classification"
+    ]
+  },
+  "lifecycle": {
+    "default_ttl_days": 365,
+    "backup_required": true,
+    "stages": {
+      "raw_upload": {"ttl_days": 90},
+      "normalized_ir": {"ttl_days": 180},
+      "final_output": {"ttl_days": 3650, "backup": true}
+    }
+  }
+}

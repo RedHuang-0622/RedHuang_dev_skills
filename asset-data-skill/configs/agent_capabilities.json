@@ -1,0 +1,45 @@
+{
+  "$schema": "../schemas/agent_capabilities.schema.json",
+  "agents": {
+    "entry_extractor": {
+      "role": "extractor",
+      "description": "从非结构化文本提取资产条目",
+      "input_formats": ["text/plain", "application/pdf", "text/markdown"],
+      "output_formats": ["raw_entries.json"],
+      "preferred_cluster_formats": ["llm_reasoning"],
+      "timeout_seconds": 300
+    },
+    "data_cleaner": {
+      "role": "cleaner",
+      "description": "清洗和校验结构化数据",
+      "input_formats": ["data.csv"],
+      "output_formats": ["data.csv", "changelog.json"],
+      "preferred_cluster_formats": ["csv_batch", "llm_reasoning"],
+      "timeout_seconds": 120
+    },
+    "data_analyzer": {
+      "role": "analyzer",
+      "description": "对标准化数据执行描述统计和高级分析",
+      "input_formats": ["data.csv", "schema.json"],
+      "output_formats": ["report.md", "data_normalized.csv"],
+      "preferred_cluster_formats": ["csv_batch"],
+      "timeout_seconds": 300
+    },
+    "compliance_auditor": {
+      "role": "auditor",
+      "description": "检查数据处理合规性和审计追踪完整性",
+      "input_formats": ["data.csv", "changelog.json", "task_meta.json"],
+      "output_formats": ["audit_report.md"],
+      "preferred_cluster_formats": ["csv_batch", "llm_reasoning"],
+      "timeout_seconds": 600
+    },
+    "pipeline_orchestrator": {
+      "role": "orchestrator",
+      "description": "Goal 驱动的流水线编排和自适应调度",
+      "input_formats": ["goal.json"],
+      "output_formats": ["pipeline_plan.json"],
+      "preferred_cluster_formats": [],
+      "timeout_seconds": 60
+    }
+  }
+}

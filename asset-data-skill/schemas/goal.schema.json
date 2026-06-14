@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goal.schema.json",
+  "title": "Goal Schema",
+  "description": "数据处理目标定义 — 用户或上游系统提交的任务描述",
+  "type": "object",
+  "required": ["asset_type", "operation", "input_source"],
+  "properties": {
+    "asset_type": {
+      "type": "string",
+      "description": "资产类型编码，对应 index.json 中的 key"
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "clean_and_validate",
+        "extract_entries",
+        "analyze",
+        "full_pipeline",
+        "normalize_only",
+        "transform",
+        "generate_report"
+      ]
+    },
+    "input_source": {
+      "type": "string",
+      "description": "数据来源：文件路径、数据库连接字符串或原始文本"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["intern", "analyst", "admin"],
+      "default": "analyst"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "interactive": {"type": "boolean", "default": false},
+        "normalize": {"type": "boolean", "default": false}
+      }
+    },
+    "policy_override": {
+      "type": "object",
+      "description": "可选的生命周期策略覆盖"
+    }
+  }
+}

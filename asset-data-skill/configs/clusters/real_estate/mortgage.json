@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "RE_MORTGAGE",
+  "inherits_from": "REAL_ESTATE_BASE",
+  "sensitivity": "sensitive",
+  "fields": {
+    "mortgage_amount": {
+      "type": "float",
+      "aliases": ["抵押金额", "担保债权额", "抵押债权"],
+      "unit": "元",
+      "min": 0,
+      "common_errors": ["包含汉字'万'", "负数", "单位为万元而非元"],
+      "access_level": "internal"
+    },
+    "mortgage_ratio": {
+      "type": "float",
+      "aliases": ["抵押率", "抵押比率"],
+      "min": 0,
+      "max": 2.0,
+      "common_errors": [">120% 可能抵押金额与评估价值填反"]
+    },
+    "mortgagee": {
+      "type": "string",
+      "aliases": ["抵押权人", "债权人"],
+      "access_level": "restricted"
+    },
+    "registration_date": {
+      "type": "date",
+      "aliases": ["抵押登记日期", "登记日期"]
+    }
+  },
+  "computed_fields": {
+    "抵押率": "mortgage_amount / valuation_amount if valuation_amount else null"
+  },
+  "table_mapping": {
+    "default_columns": [
+      "property_address",
+      "building_area_sqm",
+      "valuation_amount",
+      "mortgage_amount"
+    ]
+  },
+  "lifecycle": {
+    "default_ttl_days": 90,
+    "backup_required": true,
+    "stages": {
+      "raw_upload": {"ttl_days": 30},
+      "normalized_ir": {"ttl_days": 90},
+      "final_output": {"ttl_days": 365, "backup": true}
+    }
+  }
+}

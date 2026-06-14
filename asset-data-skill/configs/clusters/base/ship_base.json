@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../schemas/cluster.schema.json",
+  "cluster_id": "SHIP_BASE",
+  "is_base": true,
+  "sensitivity": "sensitive",
+  "fields": {
+    "ship_name": {
+      "type": "string",
+      "required": true,
+      "aliases": ["船名", "船舶名称", "船号"],
+      "access_level": "internal"
+    },
+    "imo_number": {
+      "type": "string",
+      "aliases": ["IMO编号", "IMO号", "IMO"],
+      "validator": "imo_validator",
+      "pattern": "^[0-9]{7}$"
+    },
+    "gross_tonnage": {
+      "type": "float",
+      "aliases": ["总吨位", "总吨", "GT"],
+      "unit": "吨",
+      "min": 0,
+      "normalization_available": ["zscore"]
+    },
+    "build_year": {
+      "type": "integer",
+      "aliases": ["建造年份", "建成年", "船龄起算"],
+      "min": 1900,
+      "max": 2030
+    },
+    "valuation_amount": {
+      "type": "float",
+      "aliases": ["评估价值", "船舶估值", "估值"],
+      "unit": "元",
+      "min": 0,
+      "access_level": "internal"
+    }
+  },
+  "lifecycle": {
+    "default_ttl_days": 365,
+    "backup_required": true
+  }
+}

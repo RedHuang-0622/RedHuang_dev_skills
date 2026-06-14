@@ -1,0 +1,30 @@
+{
+  "$schema": "../schemas/approval_rules.schema.json",
+  "approval_rules": {
+    "delete_rows": {
+      "description": "删除数据行",
+      "require_role": "admin",
+      "intern_require_mentor": true,
+      "max_auto_approve_percent": 5.0
+    },
+    "modify_sensitive": {
+      "description": "修改敏感字段值",
+      "require_role": "admin",
+      "intern_require_mentor": true
+    },
+    "export_full_data": {
+      "description": "导出全量数据",
+      "require_role": "analyst",
+      "intern_require_mentor": true
+    },
+    "override_policy": {
+      "description": "覆盖生命周期策略",
+      "require_role": "admin"
+    },
+    "process_all_rows": {
+      "description": "处理超过默认限制的行数",
+      "require_role": "analyst",
+      "threshold": 1000
+    }
+  }
+}

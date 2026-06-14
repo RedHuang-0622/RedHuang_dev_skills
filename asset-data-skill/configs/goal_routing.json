@@ -1,0 +1,46 @@
+{
+  "$schema": "../schemas/goal_routing.schema.json",
+  "goal_routing": {
+    "clean_and_validate": [
+      {"step": "read", "condition": null},
+      {"step": "normalize_structure", "condition": null},
+      {"step": "normalize_numeric", "condition": "ctx.meta.get('normalize', False)"},
+      {"step": "validate", "condition": null},
+      {"step": "clean", "condition": null, "confirm_before": ["delete_rows", "modify_sensitive"]},
+      {"step": "transform", "condition": null},
+      {"step": "generate_schema", "condition": null},
+      {"step": "generate_summary", "condition": null},
+      {"step": "snapshot", "condition": null},
+      {"step": "finalize", "condition": null}
+    ],
+    "extract_entries": [
+      {"step": "index_lookup", "condition": null},
+      {"step": "chunk", "condition": "ctx.raw_text is not None"},
+      {"step": "extract", "condition": null},
+      {"step": "deduplicate", "condition": null},
+      {"step": "normalize_structure", "condition": null},
+      {"step": "generate_schema", "condition": null},
+      {"step": "generate_summary", "condition": null},
+      {"step": "snapshot", "condition": null},
+      {"step": "finalize", "condition": null}
+    ],
+    "full_pipeline": [
+      {"step": "index_lookup", "condition": null},
+      {"step": "read", "condition": null},
+      {"step": "chunk", "condition": "ctx.raw_text is not None"},
+      {"step": "extract", "condition": "ctx.entries is None and ctx.raw_text is not None"},
+      {"step": "deduplicate", "condition": "ctx.entries is not None"},
+      {"step": "normalize_structure", "condition": null},
+      {"step": "normalize_numeric", "condition": "ctx.meta.get('normalize', False)"},
+      {"step": "validate", "condition": null},
+      {"step": "clean", "condition": null},
+      {"step": "transform", "condition": null},
+      {"step": "analyze", "condition": null},
+      {"step": "generate_schema", "condition": null},
+      {"step": "generate_summary", "condition": null},
+      {"step": "adapt_format", "condition": null},
+      {"step": "snapshot", "condition": null},
+      {"step": "finalize", "condition": null}
+    ]
+  }
+}

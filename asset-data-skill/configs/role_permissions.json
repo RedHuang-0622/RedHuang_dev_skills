@@ -1,0 +1,39 @@
+{
+  "$schema": "../schemas/role_permissions.schema.json",
+  "roles": {
+    "admin": {
+      "data_access": "full",
+      "row_limit": null,
+      "mask_sensitive": false,
+      "skip_approval": true,
+      "step_confirmation": "optional",
+      "can_override_policy": true,
+      "allowed_operations": ["*"]
+    },
+    "analyst": {
+      "data_access": "internal",
+      "row_limit": null,
+      "mask_sensitive": false,
+      "skip_approval": false,
+      "step_confirmation": "optional",
+      "can_override_policy": false,
+      "allowed_operations": [
+        "clean_and_validate", "extract_entries", "analyze",
+        "full_pipeline", "normalize_only", "transform", "generate_report"
+      ]
+    },
+    "intern": {
+      "data_access": "public_only",
+      "row_limit": 1000,
+      "mask_sensitive": true,
+      "skip_approval": false,
+      "step_confirmation": "required",
+      "can_override_policy": false,
+      "allowed_operations": [
+        "clean_and_validate", "extract_entries", "normalize_only"
+      ],
+      "high_risk_operations": ["delete_rows", "modify_sensitive", "export_full_data"],
+      "require_mentor_approval_for": ["delete_rows", "modify_sensitive"]
+    }
+  }
+}
