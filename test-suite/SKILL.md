@@ -99,6 +99,101 @@ lint-imports                                              # 循环 import
 
 ---
 
+## CI 生成模式
+
+当用户请求"写 CI"时，将上述测试维度映射为 GitHub Actions workflow。
+
+### 分层映射
+
+| 测试层 | CI Job 名 | 阻塞 | 关键动作 |
+|--------|-----------|:---:|----------|
+| 轻量 | `lightweight` | ✅ | `go vet` + `go build` + `go test -cover -covermode=atomic`，覆盖阈值 80% |
+| 标准 | `standard` | ✅ race | `-race -count=3`，多 Go 版本矩阵（`strategy.matrix.go-version`），benchmark 信息性 |
+| 深度 | `deep` | — | fuzz 30s（自动发现 targets: `go test -list 'Fuzz.*'`），extended stress，逃逸分析 |
+| 静态 | `static-analysis` | ✅ vuln | `govulncheck`（BLOCKING），`staticcheck`，`gofmt`，`go mod tidy` |
+| 汇总 | `summary` | — | `needs: [以上全部]`，生成 `test-report.md` artifact（30 天 retention） |
+
+### Go 项目 CI 模板骨架
+
+```yaml
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # 手动触发入口
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true   # 新 push 自动取消旧 run
+
+permissions:
+  contents: read
+  actions: read
+```
+
+### Job 依赖链
+
+```
+push/PR → lightweight ──┬── standard ─── deep
+                         ├── static-analysis
+                         └── summary (if: always())
+```
+
+- `standard` 依赖 `lightweight`：不过 vet/build 就不浪费资源跑 race
+- `static-analysis` 依赖 `lightweight`：相同原因
+- `summary` 用 `if: always()` 确保前面失败也能汇总
+
+### 关键决策点
+
+| 决策 | 做法 | 原因 |
+|------|------|------|
+| **Race 阻塞** | `-race -count=3`，失败必须修 | 并发库 data race = 未定义行为，不可放过 |
+| **多版本矩阵** | Go 1.23 + 1.24 | Go 泛型在不同版本的行为差异（类型别名、逃逸分析） |
+| **fail-fast: false** | 矩阵内不互相取消 | 一个版本挂不影响另一个版本的结果收集 |
+| **覆盖率模式** | `-covermode=atomic` | 并发代码必须用 atomic 模式，count 模式会有竞态漏报 |
+| **Fuzz 自动发现** | `go test -list 'Fuzz.*'` → 循环跑 | 不硬编码 target 列表，新增 fuzz test 自动纳入 |
+| **Benchmark 非阻塞** | `continue-on-error: true` | benchmark 受 CI runner 噪声影响大，信息性参考不阻塞 |
+| **逃逸分析** | `-gcflags="-m"` 收集 `escapes to heap` | 连接池热路径不该有意外堆分配 |
+| **Vulncheck 阻塞** | `govulncheck` 发现 CVE → 必须修 | 第三方依赖漏洞可达远程利用 |
+| **gofmt 阻塞** | `gofmt -l .` 有输出则失败 | 格式不一致污染 git blame |
+| **go mod tidy 阻塞** | `go mod tidy` 后 `git diff --exit-code` | go.sum 不一致导致可重现构建失败 |
+
+### 时长保护
+
+| 层 | timeout-minutes | 理由 |
+|----|:---:|------|
+| lightweight | 5 | vet/build/test 正常 ≤2m |
+| standard | 10 | race ×3 次 + bench，约 6-8m |
+| deep | 30 | fuzz 30s × N targets + stress |
+| static-analysis | 5 | govulncheck 下载 DB 可能慢 |
+
+### Artifact 策略
+
+- **coverage.out**: 每个 job 上传一份，带 Go 版本标签，7 天 retention
+- **benchmark 文本**: 同上，用于性能退化对比
+- **test-report.md**: summary job 生成，30 天 retention，用作历史基线
+- **逃逸分析**: 辅助调试堆分配，7 天
+
+### README Badge
+
+```markdown
+[![CI](https://github.com/{owner}/{repo}/actions/workflows/ci.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/ci.yml)
+```
+
+### 并发库专项检查清单
+
+当被测项目涉及 `goroutine` / `channel` / `sync` / `atomic` / `lock-free` 时，额外确保：
+
+1. `-race` 至少 `-count=3`（单次可能漏检）
+2. `-covermode=atomic`（不用 count）
+3. `golangci-lint` 启用 `copylocks`、`gocritic:rangeValCopy`
+4. stress test 跑 `-race -count=3`（CI 核数少可能暴露本地不出的 race）
+5. fuzz 覆盖 channel/queue 的并发入口（如 `Enqueue`/`Dequeue` 交错）
+
+---
+
 ## 输出格式
 
 写入工作目录 `test-report.md`：
